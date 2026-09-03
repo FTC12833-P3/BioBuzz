@@ -37,7 +37,7 @@ public class MM_Field_Centric extends LinearOpMode {
 
             double yPower = -gamepad1.left_stick_y;  // pushing stick forward gives negative value
             double xPower = gamepad1.left_stick_x;
-            double rotatePower = gamepad1.right_stick_x;
+            double rotatePower = gamepad1.right_stick_x; 
 
             double flPower = yPower + xPower + rotatePower; //TODO probably should change for field-centric
             double frPower = yPower - xPower - rotatePower;
