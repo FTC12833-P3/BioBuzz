@@ -14,6 +14,27 @@ public class MM_Field_Centric extends LinearOpMode {
     private DcMotor frontRightDrive = null;
     private DcMotor backRightDrive = null;
 
+    double flPower = 0;
+    double frPower = 0;
+    double blPower = 0;
+    double brPower = 0;
+
+    double maxPower;
+
+    double angle = 0; //TODO get angle
+    double strafeAngleError = 0;
+    double driveAngleError = 0;
+
+    double strafeRatio = 0; //TODO add comment
+    double driveRatio = 0; // same as above
+
+    double strafeVector = 0; // robot-centric, used to calculate x and y power
+    double driveVector = 0; // same as above
+
+    double yPower = -gamepad1.left_stick_y;  // pushing stick forward gives negative value
+    double xPower = gamepad1.left_stick_x;
+    double rotatePower = gamepad1.right_stick_x;
+
     @Override
     public void runOpMode() {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
@@ -23,8 +44,6 @@ public class MM_Field_Centric extends LinearOpMode {
 
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -33,17 +52,6 @@ public class MM_Field_Centric extends LinearOpMode {
         runtime.reset();
 
         while (opModeIsActive()) {
-            double maxPower;
-
-            double yPower = -gamepad1.left_stick_y;  // pushing stick forward gives negative value
-            double xPower = gamepad1.left_stick_x;
-            double rotatePower = gamepad1.right_stick_x; 
-
-            double flPower = yPower + xPower + rotatePower; //TODO probably should change for field-centric
-            double frPower = yPower - xPower - rotatePower;
-            double blPower = yPower - xPower + rotatePower;
-            double brPower = yPower + xPower - rotatePower;
-
             // Normalize
             maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
 
@@ -64,4 +72,20 @@ public class MM_Field_Centric extends LinearOpMode {
             telemetry.addData("Back  left/Right", "%4.2f, %4.2f", blPower, brPower);
             telemetry.update();
         }
-    }}
+    }
+    private void setDrivePowers() {
+        flPower = yPower + xPower + rotatePower;
+        frPower = yPower - xPower - rotatePower;
+        blPower = yPower - xPower + rotatePower;
+        brPower = yPower + xPower - rotatePower;
+    }
+
+    private void setStrafeAngleError() {
+        //TODO change angle based on strafeError
+    }
+
+    private void setDriveAngleError() {
+        //TODO change angle based on driveError
+    }
+
+}
