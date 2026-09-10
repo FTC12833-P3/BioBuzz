@@ -53,7 +53,6 @@ public class SensorIMUOrthogonal extends LinearOpMode
     IMU imu;
 
     @Override public void runOpMode() throws InterruptedException {
-
         imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
