@@ -65,10 +65,6 @@ public class MM_Field_Centric extends LinearOpMode {
         runtime.reset();
 
         while (opModeIsActive()) {
-            strafeVector *= gamepad1.left_stick_x;
-            driveVector *= -gamepad1.left_stick_y;
-            rotatePower = gamepad1.right_stick_x;
-
             orientation = imu.getRobotYawPitchRollAngles();
             angle = orientation.getYaw(AngleUnit.DEGREES);
 
@@ -113,7 +109,19 @@ public class MM_Field_Centric extends LinearOpMode {
         }
     }
 
+    private void calculateVectors() {
+        strafeRatio = Math.sin(Math.toDegrees(strafeAngleError));
+        driveRatio = Math.sin(Math.toDegrees(driveAngleError));
+
+        strafeVector = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
+        driveVector = driveRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
+    }
+
     private void calculateDrivePowers() {
+        strafeVector *= gamepad1.left_stick_x; //TODO see if this should be combination left_stick_x and left_stick_y
+        driveVector *= -gamepad1.left_stick_y;
+        rotatePower = gamepad1.right_stick_x;
+
         flPower = driveVector + strafeVector + rotatePower;
         frPower = driveVector - strafeVector - rotatePower;
         blPower = driveVector - strafeVector + rotatePower;
@@ -135,14 +143,6 @@ public class MM_Field_Centric extends LinearOpMode {
         frontRightDrive.setPower(frPower);
         backLeftDrive.setPower(blPower);
         backRightDrive.setPower(brPower);
-    }
-
-    private void calculateVectors() {
-        strafeRatio = sin(strafeAngleError);
-        driveRatio = sin(driveAngleError);
-
-        strafeVector = strafeRatio / (strafeRatio + driveRatio);
-        driveVector = driveRatio / (strafeRatio + driveRatio);
     }
 
     private void initializeIMU() {
