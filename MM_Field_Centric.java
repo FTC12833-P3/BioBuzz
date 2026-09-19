@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import static java.lang.Math.sin;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -40,8 +38,6 @@ public class MM_Field_Centric extends LinearOpMode {
     double strafeVector = 0; // robot-centric, used to calculate x and y power
     double driveVector = 0; // same as above
 
-    double yPower = 0; // pushing stick forward gives negative value
-    double xPower = 0;
     double rotatePower = 0;
 
     @Override
@@ -110,16 +106,22 @@ public class MM_Field_Centric extends LinearOpMode {
     }
 
     private void calculateVectors() {
-        strafeRatio = Math.sin(Math.toDegrees(strafeAngleError));
-        driveRatio = Math.sin(Math.toDegrees(driveAngleError));
+        strafeRatio = Math.sin(Math.toRadians(strafeAngleError));
+        driveRatio = Math.sin(Math.toRadians(driveAngleError));
 
         strafeVector = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
         driveVector = driveRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
     }
 
     private void calculateDrivePowers() {
-        strafeVector *= gamepad1.left_stick_x; //TODO see if this should be combination left_stick_x and left_stick_y
-        driveVector *= -gamepad1.left_stick_y;
+        if ((angle >= 45 && angle <= 135) || (angle <= -45 && angle >= -135)) {
+            driveVector *= -gamepad1.left_stick_y; // pushing stick forward gives negative value
+            strafeVector *= gamepad1.left_stick_x;
+        } else {
+            driveVector *= gamepad1.left_stick_x;
+            strafeVector *= -gamepad1.left_stick_y; // pushing stick forward gives negative value
+        }
+
         rotatePower = gamepad1.right_stick_x;
 
         flPower = driveVector + strafeVector + rotatePower;
