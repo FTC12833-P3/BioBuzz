@@ -35,10 +35,12 @@ public class MM_Field_Centric extends LinearOpMode {
     double strafeRatio = 0; //TODO add comment
     double driveRatio = 0; // same as above
 
-    double strafeVector = 0; // robot-centric, used to calculate x and y power
-    double driveVector = 0; // same as above
-
+    double strafePower = 0; // robot-centric, used to calculate x and y power
+    double drivePower = 0; // same as above
     double rotatePower = 0;
+
+    double powerDifference = 0;
+    double adjustedPowerDifference = 0;
 
     @Override
     public void runOpMode() {
@@ -106,23 +108,51 @@ public class MM_Field_Centric extends LinearOpMode {
     }
 
     private void calculateVectors() {
-        strafeRatio = Math.sin(Math.toRadians(strafeAngleError));
         driveRatio = Math.sin(Math.toRadians(driveAngleError));
+        strafeRatio = Math.sin(Math.toRadians(strafeAngleError));
 
-        strafeVector = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
-        driveVector = driveRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
+        drivePower = driveRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
+        strafePower = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
     }
 
     private void calculateDrivePowers() {
-        driveVector *= (-gamepad1.left_stick_y);
-        strafeVector *= (-gamepad1.left_stick_y);
+        if (angle >= 0 && angle < 90) { //quadrant 1 TODO make quadrant boolean variables and method
+            powerDifference = drivePower + strafePower;
+        } else if (angle >= 90) { //quadrant 2
+            powerDifference = drivePower - strafePower;
+        } else if (angle < 0) { //quadrant 3 or 4
+            powerDifference = strafePower - drivePower;
+        }
+
+        adjustedPowerDifference = powerDifference * Math.abs(gamepad1.left_stick_x);
+
+        drivePower = Math.abs(drivePower) + adjustedPowerDifference;
+        if (angle >= -90) { //quadrants 1, 2, or 4
+            strafePower = Math.abs(strafePower) + adjustedPowerDifference;
+        } else { //quadrant 3
+            strafePower = Math.abs(strafePower) - adjustedPowerDifference;
+        }
+
+        if (angle >= 90) { //quadrant 2
+            strafePower *= -1;
+        } else if (angle >= -90 && angle < 0) { //quadrant 4
+            drivePower *= -1;
+        }
+
+        if (gamepad1.left_stick_x < 0) {
+            drivePower *= -1;
+            strafePower *= -1;
+        }
+
+        drivePower *= (Math.abs(gamepad1.left_stick_y) + Math.abs(gamepad1.left_stick_x));
+        strafePower *= (Math.abs(gamepad1.left_stick_y) + Math.abs(gamepad1.left_stick_x));
 
         rotatePower = gamepad1.right_stick_x;
 
-        flPower = driveVector + strafeVector + rotatePower;
-        frPower = driveVector - strafeVector - rotatePower;
-        blPower = driveVector - strafeVector + rotatePower;
-        brPower = driveVector + strafeVector - rotatePower;
+        flPower = drivePower + strafePower + rotatePower;
+        frPower = drivePower - strafePower - rotatePower;
+        blPower = drivePower - strafePower + rotatePower;
+        brPower = drivePower + strafePower - rotatePower;
 
         //normalize
         maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
