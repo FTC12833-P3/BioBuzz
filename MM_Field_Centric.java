@@ -66,12 +66,11 @@ public class MM_Field_Centric extends LinearOpMode {
         while (opModeIsActive()) {
             orientation = imu.getRobotYawPitchRollAngles();
             angle = orientation.getYaw(AngleUnit.DEGREES);
-            getCurrentQuadrant();
-
-            getAngleError();
-            calculateVectors();
-            calculateDrivePowers();
-            setDrivePowers();
+//            getCurrentQuadrant();
+//
+//            getAngleError();
+//            calculateVectors();
+            calculateAndSetDrivePowers();
 
             // Check to see if heading reset is requested
             if (gamepad1.y) {
@@ -129,38 +128,10 @@ public class MM_Field_Centric extends LinearOpMode {
         strafePower = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
     }
 
-    private void calculateDrivePowers() {
-        if (currentQuadrant == 1) {
-            powerDifference = drivePower + strafePower;
-        } else if (currentQuadrant == 2) {
-            powerDifference = drivePower - strafePower;
-        } else if (currentQuadrant == 3 || currentQuadrant == 4) {
-            powerDifference = strafePower - drivePower;
-        }
 
-        adjustedPowerDifference = powerDifference * Math.abs(gamepad1.left_stick_x);
-
-        drivePower = Math.abs(drivePower) + adjustedPowerDifference;
-        if (currentQuadrant == 1 || currentQuadrant == 2 || currentQuadrant == 4) { //quadrants 1, 2, or 4
-            strafePower = Math.abs(strafePower) + adjustedPowerDifference;
-        } else { //quadrant 3
-            strafePower = Math.abs(strafePower) - adjustedPowerDifference;
-        }
-
-        if (currentQuadrant == 2) {
-            strafePower *= -1;
-        } else if (currentQuadrant == 4) {
-            drivePower *= -1;
-        }
-
-        if (gamepad1.left_stick_x < 0) {
-            drivePower *= -1;
-            strafePower *= -1;
-        }
-
-        drivePower *= (Math.abs(gamepad1.left_stick_y) + Math.abs(gamepad1.left_stick_x));
-        strafePower *= (Math.abs(gamepad1.left_stick_y) + Math.abs(gamepad1.left_stick_x));
-
+    private void calculateAndSetDrivePowers() {
+        drivePower = Math.sin(Math.toRadians(angle)) * (-gamepad1.left_stick_y);
+        strafePower = -Math.cos(Math.toRadians(angle)) * (-gamepad1.left_stick_y);
         rotatePower = gamepad1.right_stick_x;
 
         flPower = drivePower + strafePower + rotatePower;
@@ -177,13 +148,12 @@ public class MM_Field_Centric extends LinearOpMode {
             blPower /= maxPower;
             brPower /= maxPower;
         }
-    }
 
-    private void setDrivePowers() {
         frontLeftDrive.setPower(flPower);
         frontRightDrive.setPower(frPower);
         backLeftDrive.setPower(blPower);
         backRightDrive.setPower(brPower);
+
     }
 
     private void initializeIMU() {
