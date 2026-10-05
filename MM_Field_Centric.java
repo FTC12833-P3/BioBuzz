@@ -28,20 +28,11 @@ public class MM_Field_Centric extends LinearOpMode {
     double maxPower;
 
     private YawPitchRollAngles orientation = null;
-    double angle = 0; //TODO get angle
-    double strafeAngleError = 0;
-    double driveAngleError = 0;
-    int currentQuadrant = 1; //can be 1, 2, 3, or 4
-
-    double strafeRatio = 0; //TODO add comment
-    double driveRatio = 0; // same as above
+    double angle = 0;
 
     double strafePower = 0; // robot-centric, used to calculate x and y power
     double drivePower = 0; // same as above
     double rotatePower = 0;
-
-    double powerDifference = 0;
-    double adjustedPowerDifference = 0;
 
     @Override
     public void runOpMode() {
@@ -66,10 +57,7 @@ public class MM_Field_Centric extends LinearOpMode {
         while (opModeIsActive()) {
             orientation = imu.getRobotYawPitchRollAngles();
             angle = orientation.getYaw(AngleUnit.DEGREES);
-//            getCurrentQuadrant();
-//
-//            getAngleError();
-//            calculateVectors();
+
             calculateAndSetDrivePowers();
 
             // Check to see if heading reset is requested
@@ -92,46 +80,9 @@ public class MM_Field_Centric extends LinearOpMode {
         }
     }
 
-    private void getCurrentQuadrant() {
-        if (angle >= 0 && angle < 90) {
-            currentQuadrant = 1;
-        } else if (angle >= 90 && angle < 180) {
-            currentQuadrant = 2;
-        } else if (angle >= -180 && angle < -90) {
-            currentQuadrant = 3;
-        } else if (angle >= -90 && angle < 0) {
-            currentQuadrant = 4;
-        }
-    }
-
-    private void getAngleError() {
-        if (currentQuadrant == 1) {
-            strafeAngleError = -(90 - angle);
-            driveAngleError = angle;
-        } else if (currentQuadrant == 2) {
-            strafeAngleError = -(90 - angle);
-            driveAngleError = 180 - angle;
-        } else if (currentQuadrant == 3) {
-            strafeAngleError = -90 - angle;
-            driveAngleError = -180 - angle;
-        } else if (currentQuadrant == 4) {
-            strafeAngleError = -90 - angle;
-            driveAngleError = angle;
-        }
-    }
-
-    private void calculateVectors() {
-        driveRatio = Math.sin(Math.toRadians(driveAngleError));
-        strafeRatio = Math.sin(Math.toRadians(strafeAngleError));
-
-        drivePower = driveRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
-        strafePower = strafeRatio / (Math.abs(strafeRatio) + Math.abs(driveRatio));
-    }
-
-
     private void calculateAndSetDrivePowers() {
-        drivePower = Math.sin(Math.toRadians(angle)) * (-gamepad1.left_stick_y);
-        strafePower = -Math.cos(Math.toRadians(angle)) * (-gamepad1.left_stick_y);
+        drivePower = (Math.sin(Math.toRadians(angle)) * -gamepad1.left_stick_y) + (Math.cos(Math.toRadians(angle)) * gamepad1.left_stick_x);
+        strafePower = (-Math.cos(Math.toRadians(angle)) * -gamepad1.left_stick_y) + (Math.sin(Math.toRadians(angle)) * gamepad1.left_stick_x);
         rotatePower = gamepad1.right_stick_x;
 
         flPower = drivePower + strafePower + rotatePower;
@@ -153,7 +104,6 @@ public class MM_Field_Centric extends LinearOpMode {
         frontRightDrive.setPower(frPower);
         backLeftDrive.setPower(blPower);
         backRightDrive.setPower(brPower);
-
     }
 
     private void initializeIMU() {
