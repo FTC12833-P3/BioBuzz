@@ -3,53 +3,32 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@TeleOp(name="Field Centric Nav", group="Linear OpMode")
+@TeleOp(name="Field Centric Nav", group="MM")
 public class MM_Field_Centric extends LinearOpMode {
-
-    private ElapsedTime runtime = new ElapsedTime();
-
-    private DcMotor frontLeftDrive = null;
-    private DcMotor backLeftDrive = null;
-    private DcMotor frontRightDrive = null;
-    private DcMotor backRightDrive = null;
+    private DcMotorEx frontLeftDrive = null;
+    private DcMotorEx backLeftDrive = null;
+    private DcMotorEx frontRightDrive = null;
+    private DcMotorEx backRightDrive = null;
     private IMU imu = null;
-
-    double flPower = 0;
-    double frPower = 0;
-    double blPower = 0;
-    double brPower = 0;
-
-    double maxPower;
-
-    private YawPitchRollAngles orientation = null;
-    double angle = 0;
-
-    double strafePower = 0; // robot-centric, used to calculate x and y power
-    double drivePower = 0; // same as above
-    double rotatePower = 0;
 
     @Override
     public void runOpMode() {
-        frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
-        backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
+        frontLeftDrive = hardwareMap.get(DcMotorEx.class, "front_left_drive");
+        frontRightDrive = hardwareMap.get(DcMotorEx.class, "front_right_drive");
+        backLeftDrive = hardwareMap.get(DcMotorEx.class, "back_left_drive");
+        backRightDrive = hardwareMap.get(DcMotorEx.class, "back_right_drive");
 
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeftDrive.setDirection(DcMotorEx.Direction.REVERSE);
 
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-        imu = hardwareMap.get(IMU.class, "imu");
+        frontLeftDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        backLeftDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        backRightDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         initializeIMU();
 
@@ -57,46 +36,30 @@ public class MM_Field_Centric extends LinearOpMode {
         telemetry.update();
 
         waitForStart();
-        runtime.reset();
 
         while (opModeIsActive()) {
-            orientation = imu.getRobotYawPitchRollAngles();
-            angle = orientation.getYaw(AngleUnit.DEGREES);
+            driveWithSticks(); //field-centric navigation
 
-            calculateAndSetDrivePowers();
-
-            // Check to see if heading reset is requested
-            if (gamepad1.y) {
-                telemetry.addData("Yaw", "Resetting\n");
-                imu.resetYaw();
-            } else {
-                telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
-            }
-
-            telemetry.addLine("GYRO TELEMETRY:\n");
-            telemetry.addData("Angle", "%.2f Deg. (Heading)\n", orientation.getYaw(AngleUnit.DEGREES));
-
-            telemetry.addLine("DRIVE TELEMETRY:\n");
-            telemetry.addData("Front left power", "%4.2f", flPower);
-            telemetry.addData("Front right power", "%4.2f", frPower);
-            telemetry.addData("Back left power", "%4.2f", blPower);
-            telemetry.addData("Back right power", "%4.2f", brPower);
             telemetry.update();
         }
     }
 
-    private void calculateAndSetDrivePowers() {
-        drivePower = (Math.sin(Math.toRadians(angle)) * -gamepad1.left_stick_y) + (Math.cos(Math.toRadians(angle)) * gamepad1.left_stick_x);
-        strafePower = (-Math.cos(Math.toRadians(angle)) * -gamepad1.left_stick_y) + (Math.sin(Math.toRadians(angle)) * gamepad1.left_stick_x);
-        rotatePower = gamepad1.right_stick_x;
+    private void driveWithSticks() {
+        double heading = getHeading();
+        double sinHeading = Math.sin(Math.toRadians(heading));
+        double cosHeading = Math.cos(Math.toRadians(heading));
 
-        flPower = drivePower + strafePower + rotatePower;
-        frPower = drivePower - strafePower - rotatePower;
-        blPower = drivePower - strafePower + rotatePower;
-        brPower = drivePower + strafePower - rotatePower;
+        double drivePower = (sinHeading * -gamepad1.left_stick_y) + (cosHeading * gamepad1.left_stick_x);
+        double strafePower = (-cosHeading * -gamepad1.left_stick_y) + (sinHeading * gamepad1.left_stick_x);
+        double rotatePower = gamepad1.right_stick_x;
 
-        //normalize
-        maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
+        double flPower = drivePower + strafePower + rotatePower;
+        double frPower = drivePower - strafePower - rotatePower;
+        double blPower = drivePower - strafePower + rotatePower;
+        double brPower = drivePower + strafePower - rotatePower;
+
+        //normalize for the next 8 lines
+        double maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
 
         if (maxPower > 1.0) {
             flPower /= maxPower;
@@ -109,14 +72,34 @@ public class MM_Field_Centric extends LinearOpMode {
         frontRightDrive.setPower(frPower);
         backLeftDrive.setPower(blPower);
         backRightDrive.setPower(brPower);
+
+        telemetry.addLine("DRIVE TELEMETRY:\n"); //TODO remove telemetry once finished
+        telemetry.addData("Front left power", "%4.2f", flPower);
+        telemetry.addData("Front right power", "%4.2f", frPower);
+        telemetry.addData("Back left power", "%4.2f", blPower);
+        telemetry.addData("Back right power", "%4.2f", brPower);
+    }
+
+    private double getHeading() {
+        // Check to see if heading reset is requested
+        if (gamepad1.yWasPressed()) { //TODO consider moving heading stuff to new method
+            imu.resetYaw();
+        }
+
+        double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+
+        telemetry.addLine("GYRO TELEMETRY:\n");
+        telemetry.addData("Yaw", "Press Y (triangle) on Gamepad to reset\n");
+        telemetry.addData("Heading", "%.2f Deg. (Heading)\n", heading);
+        return heading;
     }
 
     private void initializeIMU() {
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
-
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
+        imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters(orientationOnRobot)); // if you choose two conflicting directions, this initialization will cause a code exception.
     }
 }
