@@ -8,12 +8,13 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp(name="Field Centric Nav", group="MM")
-public class MM_Field_Centric extends LinearOpMode {
+public class MM_FieldCentric extends LinearOpMode {
     private DcMotorEx frontLeftDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx frontRightDrive = null;
     private DcMotorEx backRightDrive = null;
     private IMU imu = null;
+    private MM_DrivePowers drivePowers = null;
 
     @Override
     public void runOpMode() {
@@ -30,6 +31,7 @@ public class MM_Field_Centric extends LinearOpMode {
         backLeftDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         backRightDrive.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        drivePowers = new MM_DrivePowers(this);
         initializeIMU();
 
         telemetry.addData("Status", "Initialized");
@@ -49,35 +51,18 @@ public class MM_Field_Centric extends LinearOpMode {
         double sinHeading = Math.sin(Math.toRadians(heading));
         double cosHeading = Math.cos(Math.toRadians(heading));
 
-        double drivePower = (sinHeading * -gamepad1.left_stick_y) + (cosHeading * gamepad1.left_stick_x);
+        double forwardPower = (sinHeading * -gamepad1.left_stick_y) + (cosHeading * gamepad1.left_stick_x);
         double strafePower = (-cosHeading * -gamepad1.left_stick_y) + (sinHeading * gamepad1.left_stick_x);
         double rotatePower = gamepad1.right_stick_x;
 
-        double flPower = drivePower + strafePower + rotatePower;
-        double frPower = drivePower - strafePower - rotatePower;
-        double blPower = drivePower - strafePower + rotatePower;
-        double brPower = drivePower + strafePower - rotatePower;
+        drivePowers.setDrivePowers(forwardPower, strafePower, rotatePower);
 
-        //normalize for the next 8 lines
-        double maxPower = Math.max(Math.abs(flPower), Math.max(Math.abs(frPower), Math.max(Math.abs(blPower), Math.abs(brPower))));
+        frontLeftDrive.setPower(drivePowers.getFlPower());
+        frontRightDrive.setPower(drivePowers.getFrPower());
+        backLeftDrive.setPower(drivePowers.getBlPower());
+        backRightDrive.setPower(drivePowers.getBrPower());
 
-        if (maxPower > 1.0) {
-            flPower /= maxPower;
-            frPower /= maxPower;
-            blPower /= maxPower;
-            brPower /= maxPower;
-        }
-
-        frontLeftDrive.setPower(flPower);
-        frontRightDrive.setPower(frPower);
-        backLeftDrive.setPower(blPower);
-        backRightDrive.setPower(brPower);
-
-        telemetry.addLine("DRIVE TELEMETRY:\n"); //TODO remove telemetry once finished
-        telemetry.addData("Front left power", "%4.2f", flPower);
-        telemetry.addData("Front right power", "%4.2f", frPower);
-        telemetry.addData("Back left power", "%4.2f", blPower);
-        telemetry.addData("Back right power", "%4.2f", brPower);
+        drivePowers.drivePowerTelemetry(); //comment out as needed for testing
     }
 
     private double getHeading() {
