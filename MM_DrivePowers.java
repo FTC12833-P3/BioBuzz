@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 public class MM_DrivePowers {
-    private LinearOpMode opMode;
+    private final LinearOpMode opMode;
 
     private double flPower = 0;
     private double frPower = 0;
@@ -63,21 +63,5 @@ public class MM_DrivePowers {
 
     public double getBrPower() {
         return brPower;
-    }
-
-    public void setFlPower(double flPower) {
-        this.flPower = flPower;
-    }
-
-    public void setFrPower(double frPower) {
-        this.frPower = frPower;
-    }
-
-    public void setBlPower(double blPower) {
-        this.blPower = blPower;
-    }
-
-    public void setBrPower(double brPower) {
-        this.brPower = brPower;
     }
 }
