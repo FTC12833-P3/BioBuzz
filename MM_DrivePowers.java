@@ -3,14 +3,14 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 public class MM_DrivePowers {
-    private final LinearOpMode opMode;
+    private final MM_OpMode opMode;
 
     private double flPower = 0;
     private double frPower = 0;
     private double blPower = 0;
     private double brPower = 0;
 
-    public MM_DrivePowers(LinearOpMode opMode) {
+    public MM_DrivePowers(MM_OpMode opMode) {
         this.opMode = opMode;
     }
 

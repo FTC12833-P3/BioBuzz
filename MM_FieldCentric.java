@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 @TeleOp(name="Field Centric Nav", group="MM")
-public class MM_FieldCentric extends LinearOpMode {
+public class MM_FieldCentric extends MM_OpMode {
     private DcMotorEx frontLeftDrive = null;
     private DcMotorEx backLeftDrive = null;
     private DcMotorEx frontRightDrive = null;
